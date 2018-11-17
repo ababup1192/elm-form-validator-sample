@@ -104,12 +104,12 @@ form2formErrors form =
 
 
 type alias Model =
-    {}
+    { form : Form }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( {}, Cmd.none )
+    ( { form = Form (Just 0) Nothing }, Cmd.none )
 
 
 
