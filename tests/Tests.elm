@@ -59,6 +59,14 @@ suite =
             ]
         , describe "anotherValidator(20文字以下のURL)"
             [ anotherValidatorTest
+                "20文字を超えるURLは、文字数エラーが生じること"
+                "http://fooooooooooooooo.com"
+                [ AnotherLengthError ]
+            , anotherValidatorTest
+                "20文字を超える文字は、パターンエラーと文字数エラーが生じること"
+                "fooooooooooooooooooooooooooo"
+                [ AnotherLengthError, AnotherPatternError ]
+            , anotherValidatorTest
                 "http:// から始まる20文字以下のURLであること"
                 "http://foo.com"
                 []
@@ -70,9 +78,31 @@ suite =
                 "https:// | https:// が含まれないURLは、パターンエラーが生じること"
                 "foo"
                 [ AnotherPatternError ]
-            , anotherValidatorTest
-                "20文字を超えるURLは、文字数エラーが生じること"
-                "http://fooooooooooooooo.com"
-                [ AnotherLengthError ]
+            ]
+        , describe "form2formErrors"
+            [ test "sampleInputとanotherInputを満たしていること" <|
+                \_ ->
+                    let
+                        actual =
+                            form2formErrors
+                                { sampleInput = Just 15, anotherInput = Just "http://bar.com" }
+
+                        expected =
+                            { sampleErrors = [], anotherErrors = [] }
+                    in
+                    Expect.equal actual expected
+            , test "sampleInputが範囲外エラーを生じ、anotherInputがMatchエラーを生じているとき、それぞれのエラーテキストが表示されること" <|
+                \_ ->
+                    let
+                        actual =
+                            form2formErrors
+                                { sampleInput = Just 5, anotherInput = Just "foo" }
+
+                        expected =
+                            { sampleErrors = [ "Sample Input is out of bounds" ]
+                            , anotherErrors = [ "Another Input must begin with `http://` or `https://`" ]
+                            }
+                    in
+                    Expect.equal actual expected
             ]
         ]

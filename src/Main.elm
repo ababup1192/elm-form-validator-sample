@@ -1,4 +1,12 @@
-module Main exposing (AnotherError(..), SampleError(..), anotherValidator, sampleValidator)
+module Main exposing
+    ( AnotherError(..)
+    , FormError(..)
+    , SampleError(..)
+    , anotherValidator
+    , form2formErrors
+    , formValidator
+    , sampleValidator
+    )
 
 import Browser
 import Html exposing (Html, div, h1, img, text)
@@ -73,6 +81,26 @@ displayFormError err =
 
         AnotherError AnotherPatternError ->
             "Another Input must begin with `http://` or `https://`"
+
+
+type alias FormErrors =
+    { sampleErrors : List String, anotherErrors : List String }
+
+
+form2formErrors : Form -> FormErrors
+form2formErrors form =
+    List.foldl
+        (\err ({ sampleErrors, anotherErrors } as formErrors) ->
+            case err of
+                SampleError _ ->
+                    { formErrors | sampleErrors = sampleErrors ++ [ displayFormError err ] }
+
+                AnotherError _ ->
+                    { formErrors | anotherErrors = anotherErrors ++ [ displayFormError err ] }
+        )
+        (FormErrors [] [])
+    <|
+        Validator.errors formValidator form
 
 
 type alias Model =
