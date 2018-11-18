@@ -15,35 +15,6 @@ type alias TestCase =
     String
 
 
-sampleValidatorTest : TestCase -> Int -> List SampleError -> Test
-sampleValidatorTest testCase num sampleErrorLst =
-    test testCase <|
-        \_ ->
-            let
-                actual =
-                    Validator.errors sampleValidator <| Just num
-
-                expected =
-                    sampleErrorLst
-            in
-            Expect.equal actual expected
-
-
-anotherValidatorTest : TestCase -> String -> List AnotherError -> Test
-anotherValidatorTest testCase url anotherErrorList =
-    test testCase <|
-        \_ ->
-            let
-                actual =
-                    Validator.errors anotherValidator <|
-                        Just url
-
-                expected =
-                    anotherErrorList
-            in
-            Expect.equal actual expected
-
-
 form2formErrorsTest : TestCase -> Form -> FormErrors -> Test
 form2formErrorsTest testCase form formErrors =
     test testCase <|
