@@ -104,7 +104,7 @@ listTest view texts =
                 |> Query.children []
     in
     if List.isEmpty texts then
-        \_ -> Expect.pass
+        always Expect.pass
 
     else
         Expect.all
