@@ -206,4 +206,18 @@ suite =
                 ]
                 "foooooooooooooooooooooooooooooooo"
             ]
+        , describe "submitTextView"
+            [ test "submit済であれば、h1が表示されている" <|
+                \_ ->
+                    submitTextView
+                        True
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.tag "h1", Selector.text "Submitted" ]
+            , test "submitしていなければ、何も表示されない" <|
+                \_ ->
+                    submitTextView
+                        False
+                        |> Query.fromHtml
+                        |> Query.has [ Selector.text "" ]
+            ]
         ]

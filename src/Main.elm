@@ -11,6 +11,7 @@ module Main exposing
     , formValidator
     , sampleInputView
     , sampleValidator
+    , submitTextView
     , view
     )
 
@@ -164,11 +165,7 @@ view { form, isSubmitted } =
         [ sampleInputView form.sampleInput (form |> form2formErrors |> .sampleErrors)
         , anotherInputView form.anotherInput (form |> form2formErrors |> .anotherErrors)
         , input [ type_ "button", value "submit", onClick Submit ] []
-        , if isSubmitted then
-            h1 [ style "color" "green" ] [ text "Submitted" ]
-
-          else
-            text ""
+        , submitTextView isSubmitted
         ]
 
 
@@ -210,6 +207,15 @@ anotherInputView anotherInputMaybe anotherErrors =
                     )
             )
         ]
+
+
+submitTextView : Bool -> Html Msg
+submitTextView isSubmitted =
+    if isSubmitted then
+        h1 [ style "color" "green" ] [ text "Submitted" ]
+
+    else
+        text ""
 
 
 subscriptions : Model -> Sub Msg
