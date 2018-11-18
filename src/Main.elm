@@ -1,16 +1,15 @@
 module Main exposing
     ( AnotherError(..)
-    , AnotherViewModel
     , Form
     , FormError(..)
     , FormErrors
+    , Msg(..)
     , SampleError(..)
-    , SampleViewModel
+    , anotherInputView
     , anotherValidator
     , form2formErrors
     , formValidator
-    , model2AnotherViewModel
-    , model2SampleViewModel
+    , sampleInputView
     , sampleValidator
     , view
     )
@@ -162,10 +161,8 @@ update msg ({ form } as model) =
 view : Model -> Html Msg
 view { form, isSubmitted } =
     div []
-        [ model2SampleViewModel form.sampleInput (form |> form2formErrors |> .sampleErrors)
-            |> sampleViewModel2SampleInputView
-        , model2AnotherViewModel form.anotherInput (form |> form2formErrors |> .anotherErrors)
-            |> anotherViewModel2AnotherInputView
+        [ sampleInputView form.sampleInput (form |> form2formErrors |> .sampleErrors)
+        , anotherInputView form.anotherInput (form |> form2formErrors |> .anotherErrors)
         , input [ type_ "button", value "submit", onClick Submit ] []
         , if isSubmitted then
             h1 [ style "color" "green" ] [ text "Submitted" ]
@@ -175,23 +172,12 @@ view { form, isSubmitted } =
         ]
 
 
-type alias SampleViewModel =
-    { sampleInputText : String
-    , sampleErrors : List String
-    }
-
-
-model2SampleViewModel : Maybe Int -> List String -> SampleViewModel
-model2SampleViewModel sampleInputMaybe errors =
+sampleInputView : Maybe Int -> List String -> Html Msg
+sampleInputView sampleInputMaybe sampleErrors =
     let
         sampleInputText =
             Maybe.withDefault "" (sampleInputMaybe |> Maybe.map String.fromInt)
     in
-    { sampleInputText = sampleInputText, sampleErrors = errors }
-
-
-sampleViewModel2SampleInputView : SampleViewModel -> Html Msg
-sampleViewModel2SampleInputView { sampleInputText, sampleErrors } =
     div []
         [ input [ type_ "number", value sampleInputText, onInput SampleInput ] []
         , ul [ style "list-style-type" "none" ] <|
@@ -206,23 +192,12 @@ sampleViewModel2SampleInputView { sampleInputText, sampleErrors } =
         ]
 
 
-type alias AnotherViewModel =
-    { anotherInputText : String
-    , anotherErrors : List String
-    }
-
-
-model2AnotherViewModel : Maybe String -> List String -> AnotherViewModel
-model2AnotherViewModel anotherInputMaybe errors =
+anotherInputView : Maybe String -> List String -> Html Msg
+anotherInputView anotherInputMaybe anotherErrors =
     let
         anotherInputText =
             Maybe.withDefault "" anotherInputMaybe
     in
-    { anotherInputText = anotherInputText, anotherErrors = errors }
-
-
-anotherViewModel2AnotherInputView : AnotherViewModel -> Html Msg
-anotherViewModel2AnotherInputView { anotherInputText, anotherErrors } =
     div []
         [ input [ type_ "text", value anotherInputText, onInput AnotherInput ] []
         , ul [ style "list-style-type" "none" ] <|

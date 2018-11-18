@@ -2,8 +2,12 @@ module Tests exposing (suite)
 
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
+import Html as Html exposing (Html, li)
+import Html.Attributes exposing (style, value)
 import Main exposing (..)
 import Test exposing (..)
+import Test.Html.Query as Query
+import Test.Html.Selector as Selector
 import Validator
 
 
@@ -55,32 +59,64 @@ form2formErrorsTest testCase form formErrors =
             Expect.equal actual expected
 
 
-model2SampleViewModelTest : TestCase -> Maybe Int -> List String -> SampleViewModel -> Test
-model2SampleViewModelTest testCase sampleInputMaybe errors sampleViewModel =
+sampleViewTest : TestCase -> Maybe Int -> List String -> String -> Test
+sampleViewTest testCase sampleInputMaybe errors sampleInputText =
+    let
+        view =
+            sampleInputView sampleInputMaybe errors
+    in
     test testCase <|
-        \_ ->
-            let
-                actual =
-                    model2SampleViewModel sampleInputMaybe errors
-
-                expected =
-                    sampleViewModel
-            in
-            Expect.equal actual expected
+        Expect.all
+            [ inputTextTest view sampleInputText
+            , listTest view errors
+            ]
 
 
-model2AnotherViewModelTest : TestCase -> Maybe String -> List String -> AnotherViewModel -> Test
-model2AnotherViewModelTest testCase anotherInputMaybe errors anotherViewModel =
+anotherViewTest : TestCase -> Maybe String -> List String -> String -> Test
+anotherViewTest testCase anotherInputMaybe errors anotherInputText =
+    let
+        view =
+            anotherInputView anotherInputMaybe errors
+    in
     test testCase <|
-        \_ ->
-            let
-                actual =
-                    model2AnotherViewModel anotherInputMaybe errors
+        Expect.all
+            [ inputTextTest view anotherInputText
+            , listTest view errors
+            ]
 
-                expected =
-                    anotherViewModel
-            in
-            Expect.equal actual expected
+
+inputTextTest : Html Msg -> String -> (subject -> Expectation)
+inputTextTest view inputText =
+    \_ ->
+        view
+            |> Query.fromHtml
+            |> Query.find [ Selector.tag "input" ]
+            |> Query.has [ Selector.tag "input", Selector.attribute <| value inputText ]
+
+
+listTest : Html Msg -> List String -> (subject -> Expectation)
+listTest view texts =
+    let
+        children =
+            view
+                |> Query.fromHtml
+                |> Query.find [ Selector.tag "ul" ]
+                |> Query.children []
+    in
+    if List.isEmpty texts then
+        \_ -> Expect.pass
+
+    else
+        Expect.all
+            (List.indexedMap
+                (\index text ->
+                    \_ ->
+                        children
+                            |> Query.index index
+                            |> Query.has [ Selector.text text ]
+                )
+                texts
+            )
 
 
 suite : Test
@@ -134,55 +170,40 @@ suite =
                 , anotherErrors = [ "Another Input must begin with `http://` or `https://`" ]
                 }
             ]
-        , describe "model2SampleViewModel"
-            [ model2SampleViewModelTest
-                "入力が10で、エラーが無い"
+        , describe "sampleViewModel"
+            [ sampleViewTest
+                "入力が10で、エラーがない"
                 (Just 10)
                 []
-                { sampleInputText = "10"
-                , sampleErrors = []
-                }
-            , model2SampleViewModelTest
-                "入力が5で、範囲外エラーが表示される"
-                (Just 5)
-                [ "Sample Input is out of bounds" ]
-                { sampleInputText = "5"
-                , sampleErrors = [ "Sample Input is out of bounds" ]
-                }
+                "10"
+            , sampleViewTest
+                "入力が0で、エラーが表示される"
+                (Just 0)
+                [ "some error" ]
+                "0"
             ]
-        , describe "model2AnotherViewModel"
-            [ model2AnotherViewModelTest
+        , describe "anotherViewModel"
+            [ anotherViewTest
                 "入力がなく、エラーがない"
                 Nothing
                 []
-                { anotherInputText = ""
-                , anotherErrors = []
-                }
-            , model2AnotherViewModelTest
+                ""
+            , anotherViewTest
                 "入力がhttp://から始まる20文字以内のURLで、エラーがない"
                 (Just "http://foo.com")
                 []
-                { anotherInputText = "http://foo.com"
-                , anotherErrors = []
-                }
-            , model2AnotherViewModelTest
+                "http://foo.com"
+            , anotherViewTest
                 "入力がhttp://から始まる20文字超えのURLで、文字数超えエラーが表示される"
                 (Just "http://foooooooooooooooooooooooooooooooo.com")
                 [ "Length of Another Input is toooo long" ]
-                { anotherInputText = "http://foooooooooooooooooooooooooooooooo.com"
-                , anotherErrors = [ "Length of Another Input is toooo long" ]
-                }
-            , model2AnotherViewModelTest
+                "http://foooooooooooooooooooooooooooooooo.com"
+            , anotherViewTest
                 "入力がURLの形式ではない20文字超えのURLで、パターンエラーと文字数超えエラーが表示される"
                 (Just "foooooooooooooooooooooooooooooooo")
                 [ "Length of Another Input is toooo long"
                 , "Another Input must begin with `http://` or `https://`"
                 ]
-                { anotherInputText = "foooooooooooooooooooooooooooooooo"
-                , anotherErrors =
-                    [ "Length of Another Input is toooo long"
-                    , "Another Input must begin with `http://` or `https://`"
-                    ]
-                }
+                "foooooooooooooooooooooooooooooooo"
             ]
         ]
