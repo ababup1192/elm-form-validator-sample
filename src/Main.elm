@@ -1,16 +1,24 @@
 module Main exposing
     ( AnotherError(..)
+    , AnotherViewModel
+    , Form
     , FormError(..)
+    , FormErrors
     , SampleError(..)
+    , SampleViewModel
     , anotherValidator
     , form2formErrors
     , formValidator
+    , model2AnotherViewModel
+    , model2SampleViewModel
     , sampleValidator
+    , view
     )
 
 import Browser
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (src)
+import Html exposing (Html, div, h1, input, li, text, ul)
+import Html.Attributes exposing (src, style, type_, value)
+import Html.Events exposing (onClick, onInput)
 import Regex
 import Validator exposing (Validator)
 
@@ -104,12 +112,12 @@ form2formErrors form =
 
 
 type alias Model =
-    { form : Form }
+    { form : Form, isSubmitted : Bool }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { form = Form (Just 0) Nothing }, Cmd.none )
+    ( { form = Form (Just 10) Nothing, isSubmitted = False }, Cmd.none )
 
 
 
@@ -117,12 +125,34 @@ init _ =
 
 
 type Msg
-    = NoOp
+    = SampleInput String
+    | AnotherInput String
+    | Submit
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    ( model, Cmd.none )
+update msg ({ form } as model) =
+    case msg of
+        SampleInput input ->
+            ( { model | form = { form | sampleInput = String.toInt input } }, Cmd.none )
+
+        AnotherInput input ->
+            ( { model
+                | form =
+                    { form
+                        | anotherInput =
+                            if String.isEmpty input then
+                                Nothing
+
+                            else
+                                Just input
+                    }
+              }
+            , Cmd.none
+            )
+
+        Submit ->
+            ( { model | isSubmitted = Validator.isValid formValidator form }, Cmd.none )
 
 
 
@@ -130,10 +160,80 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
+view { form, isSubmitted } =
     div []
-        [ img [ src "../src/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
+        [ model2SampleViewModel form.sampleInput (form |> form2formErrors |> .sampleErrors)
+            |> sampleViewModel2SampleInputView
+        , model2AnotherViewModel form.anotherInput (form |> form2formErrors |> .anotherErrors)
+            |> anotherViewModel2AnotherInputView
+        , input [ type_ "button", value "submit", onClick Submit ] []
+        , if isSubmitted then
+            h1 [ style "color" "green" ] [ text "Submitted" ]
+
+          else
+            text ""
+        ]
+
+
+type alias SampleViewModel =
+    { sampleInputText : String
+    , sampleErrors : List String
+    }
+
+
+model2SampleViewModel : Maybe Int -> List String -> SampleViewModel
+model2SampleViewModel sampleInputMaybe errors =
+    let
+        sampleInputText =
+            Maybe.withDefault "" (sampleInputMaybe |> Maybe.map String.fromInt)
+    in
+    { sampleInputText = sampleInputText, sampleErrors = errors }
+
+
+sampleViewModel2SampleInputView : SampleViewModel -> Html Msg
+sampleViewModel2SampleInputView { sampleInputText, sampleErrors } =
+    div []
+        [ input [ type_ "number", value sampleInputText, onInput SampleInput ] []
+        , ul [ style "list-style-type" "none" ] <|
+            (sampleErrors
+                |> List.map
+                    (\error ->
+                        li [ style "color" "red" ]
+                            [ text error
+                            ]
+                    )
+            )
+        ]
+
+
+type alias AnotherViewModel =
+    { anotherInputText : String
+    , anotherErrors : List String
+    }
+
+
+model2AnotherViewModel : Maybe String -> List String -> AnotherViewModel
+model2AnotherViewModel anotherInputMaybe errors =
+    let
+        anotherInputText =
+            Maybe.withDefault "" anotherInputMaybe
+    in
+    { anotherInputText = anotherInputText, anotherErrors = errors }
+
+
+anotherViewModel2AnotherInputView : AnotherViewModel -> Html Msg
+anotherViewModel2AnotherInputView { anotherInputText, anotherErrors } =
+    div []
+        [ input [ type_ "text", value anotherInputText, onInput AnotherInput ] []
+        , ul [ style "list-style-type" "none" ] <|
+            (anotherErrors
+                |> List.map
+                    (\error ->
+                        li [ style "color" "red" ]
+                            [ text error
+                            ]
+                    )
+            )
         ]
 
 

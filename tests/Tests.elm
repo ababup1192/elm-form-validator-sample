@@ -40,6 +40,49 @@ anotherValidatorTest testCase url anotherErrorList =
             Expect.equal actual expected
 
 
+form2formErrorsTest : TestCase -> Form -> FormErrors -> Test
+form2formErrorsTest testCase form formErrors =
+    test testCase <|
+        \_ ->
+            let
+                actual =
+                    form2formErrors
+                        form
+
+                expected =
+                    formErrors
+            in
+            Expect.equal actual expected
+
+
+model2SampleViewModelTest : TestCase -> Maybe Int -> List String -> SampleViewModel -> Test
+model2SampleViewModelTest testCase sampleInputMaybe errors sampleViewModel =
+    test testCase <|
+        \_ ->
+            let
+                actual =
+                    model2SampleViewModel sampleInputMaybe errors
+
+                expected =
+                    sampleViewModel
+            in
+            Expect.equal actual expected
+
+
+model2AnotherViewModelTest : TestCase -> Maybe String -> List String -> AnotherViewModel -> Test
+model2AnotherViewModelTest testCase anotherInputMaybe errors anotherViewModel =
+    test testCase <|
+        \_ ->
+            let
+                actual =
+                    model2AnotherViewModel anotherInputMaybe errors
+
+                expected =
+                    anotherViewModel
+            in
+            Expect.equal actual expected
+
+
 suite : Test
 suite =
     describe "The Main module"
@@ -80,29 +123,66 @@ suite =
                 [ AnotherPatternError ]
             ]
         , describe "form2formErrors"
-            [ test "sampleInputとanotherInputを満たしていること" <|
-                \_ ->
-                    let
-                        actual =
-                            form2formErrors
-                                { sampleInput = Just 15, anotherInput = Just "http://bar.com" }
-
-                        expected =
-                            { sampleErrors = [], anotherErrors = [] }
-                    in
-                    Expect.equal actual expected
-            , test "sampleInputが範囲外エラーを生じ、anotherInputがMatchエラーを生じているとき、それぞれのエラーテキストが表示されること" <|
-                \_ ->
-                    let
-                        actual =
-                            form2formErrors
-                                { sampleInput = Just 5, anotherInput = Just "foo" }
-
-                        expected =
-                            { sampleErrors = [ "Sample Input is out of bounds" ]
-                            , anotherErrors = [ "Another Input must begin with `http://` or `https://`" ]
-                            }
-                    in
-                    Expect.equal actual expected
+            [ form2formErrorsTest
+                "sampleInputとanotherInputを満たしていること"
+                { sampleInput = Just 15, anotherInput = Just "http://bar.com" }
+                { sampleErrors = [], anotherErrors = [] }
+            , form2formErrorsTest
+                "sampleInputが範囲外エラーを生じ、anotherInputがMatchエラーを生じているとき、それぞれのエラーテキストが表示されること"
+                { sampleInput = Just 5, anotherInput = Just "foo" }
+                { sampleErrors = [ "Sample Input is out of bounds" ]
+                , anotherErrors = [ "Another Input must begin with `http://` or `https://`" ]
+                }
+            ]
+        , describe "model2SampleViewModel"
+            [ model2SampleViewModelTest
+                "入力が10で、エラーが無い"
+                (Just 10)
+                []
+                { sampleInputText = "10"
+                , sampleErrors = []
+                }
+            , model2SampleViewModelTest
+                "入力が5で、範囲外エラーが表示される"
+                (Just 5)
+                [ "Sample Input is out of bounds" ]
+                { sampleInputText = "5"
+                , sampleErrors = [ "Sample Input is out of bounds" ]
+                }
+            ]
+        , describe "model2AnotherViewModel"
+            [ model2AnotherViewModelTest
+                "入力がなく、エラーがない"
+                Nothing
+                []
+                { anotherInputText = ""
+                , anotherErrors = []
+                }
+            , model2AnotherViewModelTest
+                "入力がhttp://から始まる20文字以内のURLで、エラーがない"
+                (Just "http://foo.com")
+                []
+                { anotherInputText = "http://foo.com"
+                , anotherErrors = []
+                }
+            , model2AnotherViewModelTest
+                "入力がhttp://から始まる20文字超えのURLで、文字数超えエラーが表示される"
+                (Just "http://foooooooooooooooooooooooooooooooo.com")
+                [ "Length of Another Input is toooo long" ]
+                { anotherInputText = "http://foooooooooooooooooooooooooooooooo.com"
+                , anotherErrors = [ "Length of Another Input is toooo long" ]
+                }
+            , model2AnotherViewModelTest
+                "入力がURLの形式ではない20文字超えのURLで、パターンエラーと文字数超えエラーが表示される"
+                (Just "foooooooooooooooooooooooooooooooo")
+                [ "Length of Another Input is toooo long"
+                , "Another Input must begin with `http://` or `https://`"
+                ]
+                { anotherInputText = "foooooooooooooooooooooooooooooooo"
+                , anotherErrors =
+                    [ "Length of Another Input is toooo long"
+                    , "Another Input must begin with `http://` or `https://`"
+                    ]
+                }
             ]
         ]
