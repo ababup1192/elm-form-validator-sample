@@ -12,6 +12,8 @@ module Main exposing
     , sampleInputView
     , sampleValidator
     , submitTextView
+    , updateAnotherInput
+    , updateSampleInput
     , view
     )
 
@@ -134,25 +136,30 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg ({ form } as model) =
     case msg of
         SampleInput input ->
-            ( { model | form = { form | sampleInput = String.toInt input } }, Cmd.none )
+            ( { model | form = updateSampleInput input form }, Cmd.none )
 
         AnotherInput input ->
-            ( { model
-                | form =
-                    { form
-                        | anotherInput =
-                            if String.isEmpty input then
-                                Nothing
-
-                            else
-                                Just input
-                    }
-              }
-            , Cmd.none
-            )
+            ( { model | form = updateAnotherInput input form }, Cmd.none )
 
         Submit ->
             ( { model | isSubmitted = Validator.isValid formValidator form }, Cmd.none )
+
+
+updateSampleInput : String -> Form -> Form
+updateSampleInput input form =
+    { form | sampleInput = String.toInt input }
+
+
+updateAnotherInput : String -> Form -> Form
+updateAnotherInput input form =
+    { form
+        | anotherInput =
+            if String.isEmpty input then
+                Nothing
+
+            else
+                Just input
+    }
 
 
 
