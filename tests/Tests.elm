@@ -95,18 +95,18 @@ suite =
     describe "The Main module"
         [ describe "form2formErrors"
             [ form2formErrorsTest
-                "sampleInputとanotherInputを満たしていること"
-                { sampleInput = Just 15, anotherInput = Just "http://bar.com" }
+                "sampleInputとanotherInputのバリデーション(sampleInput 10~20, anotherInput 20文字以下のURL)を満たしていること"
+                { sampleInputMaybe = Just 15, anotherInputMaybe = Just "http://bar.com" }
                 { sampleErrors = [], anotherErrors = [] }
             , form2formErrorsTest
                 "sampleInputが範囲外エラーを生じ、anotherInputがMatchエラーを生じているとき、それぞれのエラーテキストが表示されること"
-                { sampleInput = Just 5, anotherInput = Just "foo" }
+                { sampleInputMaybe = Just 5, anotherInputMaybe = Just "foo" }
                 { sampleErrors = [ "Sample Input is out of bounds" ]
                 , anotherErrors = [ "Another Input must begin with `http://` or `https://`" ]
                 }
             , form2formErrorsTest
                 "sampleInputが範囲外エラーを生じ、anotherInputが文字数超エラーとマッチエラーを生じているとき、それぞれのエラーテキストが表示されること"
-                { sampleInput = Just 5, anotherInput = Just "foooooooooooooooooooooooo" }
+                { sampleInputMaybe = Just 5, anotherInputMaybe = Just "foooooooooooooooooooooooo" }
                 { sampleErrors = [ "Sample Input is out of bounds" ]
                 , anotherErrors =
                     [ "Length of Another Input is toooo long"
@@ -165,36 +165,39 @@ suite =
                         |> Query.has [ Selector.text "" ]
             ]
         , describe "updateSampleInput"
-            [ test "与えられた数字によって、sampleInputが更新されたFormが作られること" <|
+            [ test "与えられた数字によって、sampleInputMaybeが更新されたFormが作られること" <|
                 \_ ->
                     let
                         actual =
-                            updateSampleInput "5" { sampleInput = Just 1, anotherInput = Nothing }
+                            updateSampleInput "5"
+                                { sampleInputMaybe = Just 1, anotherInputMaybe = Nothing }
 
                         expected =
-                            { sampleInput = Just 5, anotherInput = Nothing }
+                            { sampleInputMaybe = Just 5, anotherInputMaybe = Nothing }
                     in
                     Expect.equal actual expected
             ]
         , describe "updateAnotherInput"
-            [ test "入力された文字によって、anotherInputが更新されたFormが作られること" <|
+            [ test "入力された文字によって、anotherInputMaybeが更新されたFormが作られること" <|
                 \_ ->
                     let
                         actual =
-                            updateAnotherInput "aiueo" { sampleInput = Nothing, anotherInput = Nothing }
+                            updateAnotherInput "aiueo"
+                                { sampleInputMaybe = Nothing, anotherInputMaybe = Nothing }
 
                         expected =
-                            { sampleInput = Nothing, anotherInput = Just "aiueo" }
+                            { sampleInputMaybe = Nothing, anotherInputMaybe = Just "aiueo" }
                     in
                     Expect.equal actual expected
-            , test "入力文字された文字が空の場合、anotherInputがNothingで更新されたFormが作られること" <|
+            , test "入力文字された文字が空の場合、anotherInputMaybeがNothingで更新されたFormが作られること" <|
                 \_ ->
                     let
                         actual =
-                            updateAnotherInput "" { sampleInput = Nothing, anotherInput = Just "abcd" }
+                            updateAnotherInput ""
+                                { sampleInputMaybe = Nothing, anotherInputMaybe = Just "abcd" }
 
                         expected =
-                            { sampleInput = Nothing, anotherInput = Nothing }
+                            { sampleInputMaybe = Nothing, anotherInputMaybe = Nothing }
                     in
                     Expect.equal actual expected
             ]

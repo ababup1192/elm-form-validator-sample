@@ -30,8 +30,8 @@ import Validator exposing (Validator)
 
 
 type alias Form =
-    { sampleInput : Maybe Int
-    , anotherInput : Maybe String
+    { sampleInputMaybe : Maybe Int
+    , anotherInputMaybe : Maybe String
     }
 
 
@@ -72,8 +72,8 @@ type FormError
 formValidator : Validator Form FormError
 formValidator =
     Validator.concat
-        [ Validator.liftMap SampleError .sampleInput sampleValidator
-        , Validator.liftMap AnotherError .anotherInput anotherValidator
+        [ Validator.liftMap SampleError .sampleInputMaybe sampleValidator
+        , Validator.liftMap AnotherError .anotherInputMaybe anotherValidator
         ]
 
 
@@ -147,13 +147,13 @@ update msg ({ form } as model) =
 
 updateSampleInput : String -> Form -> Form
 updateSampleInput input form =
-    { form | sampleInput = String.toInt input }
+    { form | sampleInputMaybe = String.toInt input }
 
 
 updateAnotherInput : String -> Form -> Form
 updateAnotherInput input form =
     { form
-        | anotherInput =
+        | anotherInputMaybe =
             if String.isEmpty input then
                 Nothing
 
@@ -169,8 +169,8 @@ updateAnotherInput input form =
 view : Model -> Html Msg
 view { form, isSubmitted } =
     div []
-        [ sampleInputView form.sampleInput (form |> form2formErrors |> .sampleErrors)
-        , anotherInputView form.anotherInput (form |> form2formErrors |> .anotherErrors)
+        [ sampleInputView form.sampleInputMaybe (form |> form2formErrors |> .sampleErrors)
+        , anotherInputView form.anotherInputMaybe (form |> form2formErrors |> .anotherErrors)
         , input [ type_ "button", value "submit", onClick Submit ] []
         , submitTextView isSubmitted
         ]
